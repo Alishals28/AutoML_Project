@@ -44,10 +44,10 @@ class DataIngestion:
             profile = ProfileReport(df, title="Exploratory Data Analysis Report")
             profile.to_file("artifacts/eda_report.html")
 
-            return{
-                self.ingestion_config.train_data_path,
-                self.ingestion_config.test_data_path,
-                "artifacts/eda_report.html"
-            }
+            return (
+        self.ingestion_config.train_data_path,
+        self.ingestion_config.test_data_path,
+        "artifacts/eda_report.html"
+        )
         except Exception as e:
             raise CustomException(e,sys)
