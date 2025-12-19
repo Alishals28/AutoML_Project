@@ -535,12 +535,19 @@ def page_model_comparison():
     # 2. Detailed Table with Styling
     st.markdown("### 📋 Comparative Metrics")
     
-    # Apply gradient styling
-    styled_df = df_results.style.highlight_max(
-        subset=[c for c in df_results.columns if c != 'Model'], 
+    # Get numeric columns only (exclude non-numeric/object columns)
+    numeric_cols = df_results.select_dtypes(include=['number']).columns.tolist()
+    exclude_cols = ['Model', 'confusion_matrix', 'model', 'y_test_pred']
+    
+    # Create display dataframe with only numeric columns for styling
+    display_df = df_results[['Model'] + numeric_cols].copy()
+    
+    # Apply gradient styling only to numeric columns
+    styled_df = display_df.style.highlight_max(
+        subset=numeric_cols, 
         axis=0, 
         color='#D6EAF8' 
-    ).format("{:.4f}", subset=[c for c in df_results.columns if c not in ['Model', 'confusion_matrix', 'model', 'y_test_pred']])
+    ).format("{:.4f}", subset=numeric_cols)
     
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
 
