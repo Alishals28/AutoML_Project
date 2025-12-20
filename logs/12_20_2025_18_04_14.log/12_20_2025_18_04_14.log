@@ -1,0 +1,25 @@
+[ 2025-12-20 18:04:15,409 ] 49 root - INFO - IssueDetector initialized for dataset with 1025 rows, 14 columns
+[ 2025-12-20 18:04:15,410 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 18:04:15,443 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 18:04:15,444 ] 54 root - INFO - Feature types inferred: 13 features classified
+[ 2025-12-20 18:04:15,444 ] 34 root - INFO - OutlierDetector initialized with 1025 rows
+[ 2025-12-20 18:04:15,444 ] 186 root - INFO - ConstantFeatureDetector initialized (threshold=0.99)
+[ 2025-12-20 18:04:15,444 ] 69 root - INFO - Starting comprehensive issue detection...
+[ 2025-12-20 18:04:15,444 ] 83 root - INFO - Detecting missing values...
+[ 2025-12-20 18:04:15,475 ] 142 root - INFO - No missing values detected
+[ 2025-12-20 18:04:15,475 ] 147 root - INFO - Detecting outliers (continuous_numeric features only)...
+[ 2025-12-20 18:04:15,478 ] 136 root - INFO - Outlier detection for 'age': 0 outliers (0.00%), severity=low
+[ 2025-12-20 18:04:15,480 ] 136 root - INFO - Outlier detection for 'trestbps': 30 outliers (2.93%), severity=medium
+[ 2025-12-20 18:04:15,482 ] 136 root - INFO - Outlier detection for 'chol': 16 outliers (1.56%), severity=medium
+[ 2025-12-20 18:04:15,483 ] 136 root - INFO - Outlier detection for 'thalach': 4 outliers (0.39%), severity=low
+[ 2025-12-20 18:04:15,485 ] 136 root - INFO - Outlier detection for 'oldpeak': 7 outliers (0.68%), severity=low
+[ 2025-12-20 18:04:15,485 ] 161 root - INFO - Detected outliers in 4 columns
+[ 2025-12-20 18:04:15,486 ] 194 root - INFO - Detected outliers in 4 columns
+[ 2025-12-20 18:04:15,486 ] 299 root - INFO - Detecting constant/near-constant features...
+[ 2025-12-20 18:04:15,490 ] 266 root - INFO - Detected 0 constant/near-constant features
+[ 2025-12-20 18:04:15,490 ] 338 root - INFO - No constant/near-constant features detected
+[ 2025-12-20 18:04:15,490 ] 203 root - INFO - Checking for class imbalance...
+[ 2025-12-20 18:04:15,491 ] 246 root - INFO - Classes are balanced (imbalance ratio: 1.05:1)
+[ 2025-12-20 18:04:15,491 ] 251 root - INFO - Detecting high cardinality features...
+[ 2025-12-20 18:04:15,491 ] 294 root - INFO - No high cardinality features detected
+[ 2025-12-20 18:04:15,491 ] 77 root - INFO - Issue detection complete. Found 4 issues
