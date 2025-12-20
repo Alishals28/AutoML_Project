@@ -1,0 +1,12 @@
+[ 2025-12-20 20:03:21,235 ] 14 visions.backends - INFO - Pandas backend loaded 2.3.3
+[ 2025-12-20 20:03:21,247 ] 25 visions.backends - INFO - Numpy backend loaded 2.3.5
+[ 2025-12-20 20:03:21,247 ] 37 visions.backends - INFO - Pyspark backend NOT loaded
+[ 2025-12-20 20:03:21,247 ] 43 visions.backends - INFO - Python backend loaded
+[ 2025-12-20 20:03:22,898 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 20:03:22,913 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 20:03:22,914 ] 49 root - INFO - IssueDetector initialized for dataset with 1025 rows, 14 columns
+[ 2025-12-20 20:03:22,914 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 20:03:22,928 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 20:03:22,928 ] 54 root - INFO - Feature types inferred: 13 features classified
+[ 2025-12-20 20:03:22,929 ] 34 root - INFO - OutlierDetector initialized with 1025 rows
+[ 2025-12-20 20:03:22,929 ] 186 root - INFO - ConstantFeatureDetector initialized (threshold=0.99)

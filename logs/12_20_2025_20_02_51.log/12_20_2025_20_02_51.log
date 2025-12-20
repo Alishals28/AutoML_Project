@@ -1,0 +1,6 @@
+[ 2025-12-20 20:02:53,710 ] 14 visions.backends - INFO - Pandas backend loaded 2.3.3
+[ 2025-12-20 20:02:53,734 ] 25 visions.backends - INFO - Numpy backend loaded 2.3.5
+[ 2025-12-20 20:02:53,735 ] 37 visions.backends - INFO - Pyspark backend NOT loaded
+[ 2025-12-20 20:02:53,735 ] 43 visions.backends - INFO - Python backend loaded
+[ 2025-12-20 20:02:55,999 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 20:02:56,031 ] 53 root - INFO - Feature type inference complete. Classified 13 features

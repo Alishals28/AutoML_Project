@@ -13,7 +13,7 @@ class ReportGenerator:
     - Best Model Metrics with Justification
     - Model Configurations & Hyperparameters
     """
-    def __init__(self, dataset, target_column, issues, user_decisions, preprocessing_config, model_results, best_model):
+    def __init__(self, dataset, target_column, issues, user_decisions, preprocessing_config, model_results, best_model, preprocessing_log=None, feature_types=None):
         self.dataset = dataset
         self.target_column = target_column
         self.issues = issues
@@ -21,6 +21,8 @@ class ReportGenerator:
         self.preprocessing_config = preprocessing_config
         self.model_results = model_results
         self.best_model = best_model
+        self.preprocessing_log = preprocessing_log or []
+        self.feature_types = feature_types or {}
 
     def generate_html_report(self):
         # Current timestamp
@@ -68,10 +70,13 @@ class ReportGenerator:
                 <h2>2. Exploratory Data Analysis (EDA) Findings</h2>
                 {self._generate_eda_findings()}
 
-                <h2>3. Data Quality Issues & User Decisions</h2>
+                <h2>3. Feature Type Analysis</h2>
+                {self._generate_feature_types_section()}
+
+                <h2>4. Data Quality Issues & User Decisions</h2>
                 {self._generate_issues_table()}
 
-                <h2>4. Preprocessing Configuration</h2>
+                <h2>5. Preprocessing Configuration</h2>
                 <ul>
                     <li><strong>Missing Value Strategy:</strong> {self.preprocessing_config.get('missing_strategy', 'N/A')}</li>
                     <li><strong>Outlier Strategy:</strong> {self.preprocessing_config.get('outlier_strategy', 'N/A')}</li>
@@ -80,16 +85,19 @@ class ReportGenerator:
                     <li><strong>Test Split Size:</strong> {float(self.preprocessing_config.get('test_size', 0.2))*100:.0f}%</li>
                 </ul>
 
-                <h2>4. Model Configurations & Hyperparameters</h2>
+                <h2>6. Preprocessing Decisions Log</h2>
+                {self._generate_preprocessing_log()}
+
+                <h2>7. Model Configurations & Hyperparameters</h2>
                 {self._generate_model_configs()}
 
-                <h2>5. Model Performance Comparison</h2>
+                <h2>8. Model Performance Comparison</h2>
                 {self._generate_model_table()}
 
-                <h2>6. Confusion Matrices by Model</h2>
+                <h2>9. Confusion Matrices by Model</h2>
                 {self._generate_confusion_matrices()}
 
-                <h2>7. 🏆 Best Model Selected & Justification</h2>
+                <h2>10. 🏆 Best Model Selected & Justification</h2>
                 {self._generate_best_model_section()}
 
                 <hr>
@@ -153,6 +161,65 @@ class ReportGenerator:
         </div>
         """
         return findings_html
+
+    def _generate_feature_types_section(self):
+        """Generate feature type analysis section"""
+        if not self.feature_types:
+            return "<p>⚠️ No feature type information available.</p>"
+        
+        # Count by type
+        type_counts = {}
+        for col, ftype in self.feature_types.items():
+            if ftype not in type_counts:
+                type_counts[ftype] = []
+            type_counts[ftype].append(col)
+        
+        html = """
+        <div class="metric-box">
+            <h3>📊 Feature Type Distribution</h3>
+            <ul>
+        """
+        
+        for ftype, cols in sorted(type_counts.items()):
+            html += f"<li><strong>{ftype}:</strong> {len(cols)} features</li>"
+        
+        html += "</ul><h3>📋 Feature Type Details</h3><table><thead><tr><th>Feature</th><th>Type</th></tr></thead><tbody>"
+        
+        for col, ftype in sorted(self.feature_types.items()):
+            html += f"<tr><td>{col}</td><td>{ftype}</td></tr>"
+        
+        html += "</tbody></table></div>"
+        return html
+
+    def _generate_preprocessing_log(self):
+        """Generate preprocessing decisions log"""
+        if not self.preprocessing_log:
+            return "<p>⚠️ No preprocessing steps were logged.</p>"
+        
+        html = """
+        <div class="metric-box">
+            <h3>🔄 Applied Preprocessing Steps</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+        """
+        
+        for log_entry in self.preprocessing_log:
+            action = log_entry.get('action', 'Unknown')
+            description = log_entry.get('description', 'No description')
+            html += f"<tr><td>{action}</td><td>{description}</td></tr>"
+        
+        html += """
+                </tbody>
+            </table>
+        </div>
+        """
+        return html
 
     def _generate_issues_table(self):
         """Helper to create HTML table for issues"""
@@ -224,7 +291,7 @@ class ReportGenerator:
 
     def _generate_best_model_section(self):
         """Generate best model summary with detailed justification"""
-        if not self.best_model or self.best_model.empty:
+        if self.best_model is None or (hasattr(self.best_model, 'empty') and self.best_model.empty):
             return "<p>⚠️ No best model available.</p>"
         
         model_name = self.best_model.get('Model', 'Unknown')
@@ -358,17 +425,19 @@ class ReportGenerator:
         for model_name, metrics in self.model_results.items():
             row = {}
             if isinstance(metrics, dict):
-                row = metrics.copy()
-            row['Model'] = model_name
+                # Extract only the metrics we want to display
+                row['Model'] = model_name
+                row['Accuracy'] = metrics.get('accuracy', 0)
+                row['Precision'] = metrics.get('precision', 0)
+                row['Recall'] = metrics.get('recall', 0)
+                row['F1-Score'] = metrics.get('F1-Score', 0)
+                row['ROC-AUC'] = metrics.get('ROC-AUC', 'N/A')
+                row['Training Time (s)'] = metrics.get('training_time', 0)
             rows_list.append(row)
             
         df = pd.DataFrame(rows_list)
         
-        # Reorder columns to ensure Model is first
-        cols = ['Model'] + [c for c in df.columns if c != 'Model' and c not in ['model', 'y_test_pred', 'confusion_matrix']]
-        df = df[[c for c in cols if c in df.columns]]
-        
-        # Sort by F1 Score if available
+        # Sort by F1 Score descending
         if 'F1-Score' in df.columns:
             df = df.sort_values('F1-Score', ascending=False)
             

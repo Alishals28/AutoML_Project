@@ -827,7 +827,9 @@ def page_report_generation():
                 user_decisions=st.session_state.user_decisions,
                 preprocessing_config=st.session_state.preprocessing_config,
                 model_results=st.session_state.model_results,
-                best_model=st.session_state.best_model
+                best_model=st.session_state.best_model,
+                preprocessing_log=st.session_state.get('preprocessing_log', []),
+                feature_types=st.session_state.get('feature_types', {})
             )
             html_report = report_gen.generate_html_report()
             
