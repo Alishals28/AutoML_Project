@@ -210,7 +210,8 @@ class ReportGenerator:
                 <thead>
                     <tr>
                         <th>Action</th>
-                        <th>Description</th>
+                        <th>Columns Affected</th>
+                        <th>Details</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -218,8 +219,34 @@ class ReportGenerator:
         
         for log_entry in self.preprocessing_log:
             action = log_entry.get('action', 'Unknown')
-            description = log_entry.get('description', 'No description')
-            html += f"<tr><td>{action}</td><td>{description}</td></tr>"
+            columns = log_entry.get('columns_affected', [])
+            details_dict = log_entry.get('details', {})
+            
+            # Format column list
+            if isinstance(columns, list):
+                columns_str = ', '.join(str(c) for c in columns) if columns else 'N/A'
+            else:
+                columns_str = str(columns)
+            
+            # Format details from nested dict
+            details_list = []
+            if isinstance(details_dict, dict):
+                for col, detail in details_dict.items():
+                    if isinstance(detail, dict):
+                        action_taken = detail.get('action', 'N/A')
+                        if action == 'outlier_handling':
+                            total = detail.get('total_capped', detail.get('rows_removed', 0))
+                            details_list.append(f"{col}: {action_taken} ({total} values)")
+                        elif action == 'missing_value_handling':
+                            imputed = detail.get('values_imputed', 0)
+                            strategy = detail.get('action', 'N/A')
+                            details_list.append(f"{col}: {strategy} ({imputed} values)")
+                        else:
+                            details_list.append(f"{col}: {action_taken}")
+            
+            details_str = '<br>'.join(details_list) if details_list else log_entry.get('description', 'Applied')
+            
+            html += f"<tr><td>{action.replace('_', ' ').title()}</td><td>{columns_str}</td><td>{details_str}</td></tr>"
         
         html += """
                 </tbody>
@@ -235,13 +262,22 @@ class ReportGenerator:
         
         rows = ""
         for i, issue in enumerate(self.issues):
-            decision_key = f"{issue['type']}_{i}"
-            decision = self.user_decisions.get(decision_key, "Default/No Action")
+            # Try multiple key formats to find user decision
+            issue_type = issue['type']
+            column = issue.get('column', 'global')
+            
+            # Try format used in app: {type}_{i}_{column}
+            decision_key1 = f"{issue_type}_{i}_{column}"
+            # Try alternative format: {type}_{i}
+            decision_key2 = f"{issue_type}_{i}"
+            
+            decision = self.user_decisions.get(decision_key1, 
+                                              self.user_decisions.get(decision_key2, "Default/No Action"))
             
             rows += f"""
             <tr>
-                <td>{issue['type']}</td>
-                <td>{issue.get('column', 'Global')}</td>
+                <td>{issue_type}</td>
+                <td>{column}</td>
                 <td>{issue.get('severity', 'Medium')}</td>
                 <td>{decision}</td>
             </tr>
@@ -302,19 +338,22 @@ class ReportGenerator:
             return "<p>⚠️ No best model available.</p>"
         
         model_name = self.best_model.get('Model', 'Unknown')
-        f1_score = self.best_model.get('F1-Score', 0)
-        accuracy = self.best_model.get('Accuracy', 0)
-        precision = self.best_model.get('Precision', 0)
-        recall = self.best_model.get('Recall', 0)
-        roc_auc = self.best_model.get('roc_auc', None)
-        training_time = self.best_model.get('training_time', 0)
+        # Handle both key formats
+        f1_score = self.best_model.get('f1_score', self.best_model.get('F1-Score', 0))
+        accuracy = self.best_model.get('accuracy', self.best_model.get('Accuracy', 0))
+        precision = self.best_model.get('precision', self.best_model.get('Precision', 0))
+        recall = self.best_model.get('recall', self.best_model.get('Recall', 0))
+        roc_auc = self.best_model.get('roc_auc', self.best_model.get('ROC-AUC', None))
+        training_time = self.best_model.get('training_time', self.best_model.get('Training Time (s)', 0))
         
         # Calculate performance ranking
         if self.model_results:
             all_f1_scores = []
             for metrics in self.model_results.values():
-                if isinstance(metrics, dict) and 'F1-Score' in metrics:
-                    all_f1_scores.append(metrics['F1-Score'])
+                if isinstance(metrics, dict):
+                    f1 = metrics.get('f1_score', metrics.get('F1-Score', 0))
+                    if f1:
+                        all_f1_scores.append(f1)
             
             if all_f1_scores:
                 rank = sorted(all_f1_scores, reverse=True).index(f1_score) + 1
@@ -433,12 +472,13 @@ class ReportGenerator:
             row = {}
             if isinstance(metrics, dict):
                 # Extract only the metrics we want to display
+                # Handle both underscore and hyphen key formats
                 row['Model'] = model_name
                 row['Accuracy'] = metrics.get('accuracy', 0)
                 row['Precision'] = metrics.get('precision', 0)
                 row['Recall'] = metrics.get('recall', 0)
-                row['F1-Score'] = metrics.get('F1-Score', 0)
-                row['ROC-AUC'] = metrics.get('ROC-AUC', 'N/A')
+                row['F1-Score'] = metrics.get('f1_score', metrics.get('F1-Score', 0))
+                row['ROC-AUC'] = metrics.get('roc_auc', metrics.get('ROC-AUC', 'N/A'))
                 row['Training Time (s)'] = metrics.get('training_time', 0)
             rows_list.append(row)
             
