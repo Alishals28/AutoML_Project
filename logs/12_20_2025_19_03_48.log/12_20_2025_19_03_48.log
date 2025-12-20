@@ -1,0 +1,23 @@
+[ 2025-12-20 19:03:48,418 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:03:48,436 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 19:03:48,436 ] 42 root - INFO - PreprocessingApplicator initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:03:48,437 ] 332 root - INFO - Applying class imbalance handling: no action...
+[ 2025-12-20 19:03:48,444 ] 72 root - INFO - Categorical columns: []
+[ 2025-12-20 19:03:48,444 ] 73 root - INFO - Numerical columns: ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
+[ 2025-12-20 19:03:48,459 ] 37 root - INFO - Split training and test input data
+[ 2025-12-20 19:03:52,997 ] 89 root - INFO - GridSearchCV - Best model params for Random Forest: {'max_depth': 10, 'n_estimators': 32}
+[ 2025-12-20 19:03:53,015 ] 133 root - INFO - Random Forest - Accuracy: 1.0000, Precision: 1.0000, Recall: 1.0000, F1: 1.0000, Time: 4.54s
+[ 2025-12-20 19:03:53,079 ] 89 root - INFO - GridSearchCV - Best model params for Decision Tree: {'criterion': 'gini', 'max_depth': None}
+[ 2025-12-20 19:03:53,090 ] 133 root - INFO - Decision Tree - Accuracy: 0.9883, Precision: 1.0000, Recall: 0.9773, F1: 0.9885, Time: 0.06s
+[ 2025-12-20 19:03:53,152 ] 89 root - INFO - GridSearchCV - Best model params for Logistic Regression: {'C': 1.0, 'penalty': 'l2', 'solver': 'lbfgs'}
+[ 2025-12-20 19:03:53,159 ] 133 root - INFO - Logistic Regression - Accuracy: 0.8249, Precision: 0.7959, Recall: 0.8864, F1: 0.8387, Time: 0.06s
+[ 2025-12-20 19:03:54,615 ] 89 root - INFO - GridSearchCV - Best model params for AdaBoost Classifier: {'learning_rate': 1.0, 'n_estimators': 128}
+[ 2025-12-20 19:03:54,654 ] 133 root - INFO - AdaBoost Classifier - Accuracy: 0.8949, Precision: 0.8832, Recall: 0.9167, F1: 0.8996, Time: 1.46s
+[ 2025-12-20 19:03:54,719 ] 89 root - INFO - GridSearchCV - Best model params for K-Nearest Neighbors: {'metric': 'euclidean', 'n_neighbors': 3}
+[ 2025-12-20 19:03:54,743 ] 133 root - INFO - K-Nearest Neighbors - Accuracy: 0.9261, Precision: 0.9313, Recall: 0.9242, F1: 0.9278, Time: 0.06s
+[ 2025-12-20 19:03:54,750 ] 133 root - INFO - Naive Bayes - Accuracy: 0.8405, Precision: 0.8321, Recall: 0.8636, F1: 0.8476, Time: 0.00s
+[ 2025-12-20 19:03:55,096 ] 89 root - INFO - GridSearchCV - Best model params for Support Vector Machine: {'C': 2.0, 'kernel': 'rbf'}
+[ 2025-12-20 19:03:55,124 ] 133 root - INFO - Support Vector Machine - Accuracy: 0.9455, Precision: 0.9538, Recall: 0.9394, F1: 0.9466, Time: 0.35s
+[ 2025-12-20 19:03:55,136 ] 119 root - WARNING - OneR Classifier does not support probability predictions for ROC-AUC
+[ 2025-12-20 19:03:55,137 ] 133 root - INFO - OneR Classifier - Accuracy: 0.7393, Precision: 0.7519, Recall: 0.7348, F1: 0.7433, Time: 0.01s
+[ 2025-12-20 19:03:55,137 ] 108 root - INFO - Best found model: Random Forest
