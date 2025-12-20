@@ -1,0 +1,72 @@
+[ 2025-12-20 19:39:55,611 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:39:55,637 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 19:39:55,858 ] 49 root - INFO - IssueDetector initialized for dataset with 1025 rows, 14 columns
+[ 2025-12-20 19:39:55,858 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:39:55,872 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 19:39:55,872 ] 54 root - INFO - Feature types inferred: 13 features classified
+[ 2025-12-20 19:39:55,872 ] 34 root - INFO - OutlierDetector initialized with 1025 rows
+[ 2025-12-20 19:39:55,872 ] 186 root - INFO - ConstantFeatureDetector initialized (threshold=0.99)
+[ 2025-12-20 19:39:55,872 ] 69 root - INFO - Starting comprehensive issue detection...
+[ 2025-12-20 19:39:55,872 ] 83 root - INFO - Detecting missing values...
+[ 2025-12-20 19:39:55,875 ] 142 root - INFO - No missing values detected
+[ 2025-12-20 19:39:55,875 ] 147 root - INFO - Detecting outliers (continuous_numeric features only)...
+[ 2025-12-20 19:39:55,878 ] 136 root - INFO - Outlier detection for 'age': 0 outliers (0.00%), severity=low
+[ 2025-12-20 19:39:55,879 ] 136 root - INFO - Outlier detection for 'trestbps': 30 outliers (2.93%), severity=medium
+[ 2025-12-20 19:39:55,881 ] 136 root - INFO - Outlier detection for 'chol': 16 outliers (1.56%), severity=medium
+[ 2025-12-20 19:39:55,882 ] 136 root - INFO - Outlier detection for 'thalach': 4 outliers (0.39%), severity=low
+[ 2025-12-20 19:39:55,885 ] 136 root - INFO - Outlier detection for 'oldpeak': 7 outliers (0.68%), severity=low
+[ 2025-12-20 19:39:55,885 ] 161 root - INFO - Detected outliers in 4 columns
+[ 2025-12-20 19:39:55,885 ] 194 root - INFO - Detected outliers in 4 columns
+[ 2025-12-20 19:39:55,885 ] 299 root - INFO - Detecting constant/near-constant features...
+[ 2025-12-20 19:39:55,891 ] 266 root - INFO - Detected 0 constant/near-constant features
+[ 2025-12-20 19:39:55,891 ] 338 root - INFO - No constant/near-constant features detected
+[ 2025-12-20 19:39:55,891 ] 203 root - INFO - Checking for class imbalance...
+[ 2025-12-20 19:39:55,892 ] 246 root - INFO - Classes are balanced (imbalance ratio: 1.05:1)
+[ 2025-12-20 19:39:55,892 ] 251 root - INFO - Detecting high cardinality features...
+[ 2025-12-20 19:39:55,892 ] 294 root - INFO - No high cardinality features detected
+[ 2025-12-20 19:39:55,892 ] 77 root - INFO - Issue detection complete. Found 4 issues
+[ 2025-12-20 19:39:55,893 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:39:55,911 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 19:39:55,912 ] 42 root - INFO - PreprocessingApplicator initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:39:55,912 ] 181 root - INFO - Applying outlier handling...
+[ 2025-12-20 19:39:55,917 ] 254 root - INFO - Capped 30 outliers in 'trestbps'
+[ 2025-12-20 19:39:55,919 ] 254 root - INFO - Capped 16 outliers in 'chol'
+[ 2025-12-20 19:39:55,921 ] 254 root - INFO - Capped 4 outliers in 'thalach'
+[ 2025-12-20 19:39:55,924 ] 254 root - INFO - Capped 7 outliers in 'oldpeak'
+[ 2025-12-20 19:39:55,924 ] 332 root - INFO - Applying class imbalance handling: no action...
+[ 2025-12-20 19:39:55,934 ] 72 root - INFO - Categorical columns: []
+[ 2025-12-20 19:39:55,934 ] 73 root - INFO - Numerical columns: ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
+[ 2025-12-20 19:39:55,958 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:39:55,969 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 19:39:55,970 ] 42 root - INFO - PreprocessingApplicator initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:39:55,970 ] 181 root - INFO - Applying outlier handling...
+[ 2025-12-20 19:39:55,971 ] 254 root - INFO - Capped 30 outliers in 'trestbps'
+[ 2025-12-20 19:39:55,973 ] 254 root - INFO - Capped 16 outliers in 'chol'
+[ 2025-12-20 19:39:55,974 ] 254 root - INFO - Capped 4 outliers in 'thalach'
+[ 2025-12-20 19:39:55,975 ] 254 root - INFO - Capped 7 outliers in 'oldpeak'
+[ 2025-12-20 19:39:55,975 ] 332 root - INFO - Applying class imbalance handling: no action...
+[ 2025-12-20 19:39:55,979 ] 72 root - INFO - Categorical columns: []
+[ 2025-12-20 19:39:55,979 ] 73 root - INFO - Numerical columns: ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
+[ 2025-12-20 19:39:56,115 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:39:56,128 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 19:39:56,128 ] 42 root - INFO - PreprocessingApplicator initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:39:56,128 ] 332 root - INFO - Applying class imbalance handling: no action...
+[ 2025-12-20 19:39:56,130 ] 72 root - INFO - Categorical columns: []
+[ 2025-12-20 19:39:56,131 ] 73 root - INFO - Numerical columns: ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
+[ 2025-12-20 19:39:56,141 ] 37 root - INFO - Split training and test input data
+[ 2025-12-20 19:40:01,994 ] 91 root - INFO - Search params for Random Forest: {'n_estimators': 32, 'max_depth': None}
+[ 2025-12-20 19:40:02,022 ] 127 root - INFO - Random Forest - Acc: 1.0000, Prec: 1.0000, Rec: 1.0000, F1: 1.0000, Time: 5.85s
+[ 2025-12-20 19:40:02,100 ] 91 root - INFO - Search params for Decision Tree: {'max_depth': None, 'criterion': 'entropy'}
+[ 2025-12-20 19:40:02,118 ] 127 root - INFO - Decision Tree - Acc: 1.0000, Prec: 1.0000, Rec: 1.0000, F1: 1.0000, Time: 0.08s
+[ 2025-12-20 19:40:02,184 ] 91 root - INFO - Search params for Logistic Regression: {'solver': 'lbfgs', 'penalty': 'l2', 'C': 0.5}
+[ 2025-12-20 19:40:02,197 ] 127 root - INFO - Logistic Regression - Acc: 0.8098, Prec: 0.7619, Rec: 0.9143, F1: 0.8312, Time: 0.07s
+[ 2025-12-20 19:40:03,804 ] 91 root - INFO - Search params for AdaBoost Classifier: {'n_estimators': 128, 'learning_rate': 1.0}
+[ 2025-12-20 19:40:03,839 ] 127 root - INFO - AdaBoost Classifier - Acc: 0.9171, Prec: 0.9074, Rec: 0.9333, F1: 0.9202, Time: 1.61s
+[ 2025-12-20 19:40:03,935 ] 91 root - INFO - Search params for K-Nearest Neighbors: {'n_neighbors': 3, 'metric': 'manhattan'}
+[ 2025-12-20 19:40:03,971 ] 127 root - INFO - K-Nearest Neighbors - Acc: 0.9463, Prec: 0.9352, Rec: 0.9619, F1: 0.9484, Time: 0.10s
+[ 2025-12-20 19:40:03,991 ] 127 root - INFO - Naive Bayes - Acc: 0.8293, Prec: 0.8070, Rec: 0.8762, F1: 0.8402, Time: 0.00s
+[ 2025-12-20 19:40:04,476 ] 91 root - INFO - Search params for Support Vector Machine: {'kernel': 'rbf', 'C': 2.0}
+[ 2025-12-20 19:40:04,492 ] 127 root - INFO - Support Vector Machine - Acc: 0.9561, Prec: 0.9444, Rec: 0.9714, F1: 0.9577, Time: 0.48s
+[ 2025-12-20 19:40:04,508 ] 113 root - WARNING - OneR Classifier lacks predict_proba; ROC-AUC skipped
+[ 2025-12-20 19:40:04,509 ] 127 root - INFO - OneR Classifier - Acc: 0.7073, Prec: 0.7103, Rec: 0.7238, F1: 0.7170, Time: 0.01s
+[ 2025-12-20 19:40:04,509 ] 108 root - INFO - Best found model: Random Forest

@@ -1,0 +1,49 @@
+[ 2025-12-20 19:38:07,335 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:38:07,362 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 19:38:07,965 ] 49 root - INFO - IssueDetector initialized for dataset with 1025 rows, 14 columns
+[ 2025-12-20 19:38:07,965 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:38:07,980 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 19:38:07,980 ] 54 root - INFO - Feature types inferred: 13 features classified
+[ 2025-12-20 19:38:07,980 ] 34 root - INFO - OutlierDetector initialized with 1025 rows
+[ 2025-12-20 19:38:07,981 ] 186 root - INFO - ConstantFeatureDetector initialized (threshold=0.99)
+[ 2025-12-20 19:38:07,981 ] 69 root - INFO - Starting comprehensive issue detection...
+[ 2025-12-20 19:38:07,981 ] 83 root - INFO - Detecting missing values...
+[ 2025-12-20 19:38:07,984 ] 142 root - INFO - No missing values detected
+[ 2025-12-20 19:38:07,984 ] 147 root - INFO - Detecting outliers (continuous_numeric features only)...
+[ 2025-12-20 19:38:07,988 ] 136 root - INFO - Outlier detection for 'age': 0 outliers (0.00%), severity=low
+[ 2025-12-20 19:38:07,992 ] 136 root - INFO - Outlier detection for 'trestbps': 30 outliers (2.93%), severity=medium
+[ 2025-12-20 19:38:07,995 ] 136 root - INFO - Outlier detection for 'chol': 16 outliers (1.56%), severity=medium
+[ 2025-12-20 19:38:07,998 ] 136 root - INFO - Outlier detection for 'thalach': 4 outliers (0.39%), severity=low
+[ 2025-12-20 19:38:08,001 ] 136 root - INFO - Outlier detection for 'oldpeak': 7 outliers (0.68%), severity=low
+[ 2025-12-20 19:38:08,002 ] 161 root - INFO - Detected outliers in 4 columns
+[ 2025-12-20 19:38:08,002 ] 194 root - INFO - Detected outliers in 4 columns
+[ 2025-12-20 19:38:08,002 ] 299 root - INFO - Detecting constant/near-constant features...
+[ 2025-12-20 19:38:08,009 ] 266 root - INFO - Detected 0 constant/near-constant features
+[ 2025-12-20 19:38:08,009 ] 338 root - INFO - No constant/near-constant features detected
+[ 2025-12-20 19:38:08,009 ] 203 root - INFO - Checking for class imbalance...
+[ 2025-12-20 19:38:08,010 ] 246 root - INFO - Classes are balanced (imbalance ratio: 1.05:1)
+[ 2025-12-20 19:38:08,010 ] 251 root - INFO - Detecting high cardinality features...
+[ 2025-12-20 19:38:08,010 ] 294 root - INFO - No high cardinality features detected
+[ 2025-12-20 19:38:08,010 ] 77 root - INFO - Issue detection complete. Found 4 issues
+[ 2025-12-20 19:38:08,011 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:38:08,032 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 19:38:08,032 ] 42 root - INFO - PreprocessingApplicator initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:38:08,032 ] 181 root - INFO - Applying outlier handling...
+[ 2025-12-20 19:38:08,039 ] 254 root - INFO - Capped 30 outliers in 'trestbps'
+[ 2025-12-20 19:38:08,043 ] 254 root - INFO - Capped 16 outliers in 'chol'
+[ 2025-12-20 19:38:08,046 ] 254 root - INFO - Capped 4 outliers in 'thalach'
+[ 2025-12-20 19:38:08,048 ] 254 root - INFO - Capped 7 outliers in 'oldpeak'
+[ 2025-12-20 19:38:08,048 ] 332 root - INFO - Applying class imbalance handling: no action...
+[ 2025-12-20 19:38:08,064 ] 72 root - INFO - Categorical columns: []
+[ 2025-12-20 19:38:08,064 ] 73 root - INFO - Numerical columns: ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
+[ 2025-12-20 19:38:08,096 ] 36 root - INFO - FeatureTypeInference initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:38:08,114 ] 53 root - INFO - Feature type inference complete. Classified 13 features
+[ 2025-12-20 19:38:08,115 ] 42 root - INFO - PreprocessingApplicator initialized with 1025 rows, 14 columns
+[ 2025-12-20 19:38:08,115 ] 181 root - INFO - Applying outlier handling...
+[ 2025-12-20 19:38:08,116 ] 254 root - INFO - Capped 30 outliers in 'trestbps'
+[ 2025-12-20 19:38:08,118 ] 254 root - INFO - Capped 16 outliers in 'chol'
+[ 2025-12-20 19:38:08,119 ] 254 root - INFO - Capped 4 outliers in 'thalach'
+[ 2025-12-20 19:38:08,120 ] 254 root - INFO - Capped 7 outliers in 'oldpeak'
+[ 2025-12-20 19:38:08,120 ] 332 root - INFO - Applying class imbalance handling: no action...
+[ 2025-12-20 19:38:08,123 ] 72 root - INFO - Categorical columns: []
+[ 2025-12-20 19:38:08,124 ] 73 root - INFO - Numerical columns: ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']

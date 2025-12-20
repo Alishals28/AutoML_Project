@@ -190,8 +190,11 @@ def page_eda():
     df = st.session_state.df
     target_col = st.session_state.get('target_column')
     
-    # Initialize EDA generator
-    eda_gen = EDAGenerator(df, target_column=target_col, test_size=0.2)
+    # Get test_size from preprocessing config or default
+    test_size = st.session_state.preprocessing_config.get('test_size', 0.2)
+    
+    # Initialize EDA generator with dynamic test_size
+    eda_gen = EDAGenerator(df, target_column=target_col, test_size=test_size)
     
     # Modern Tab interface
     tab_names = ["📋 Overview", "📊 Missing Data", "🔍 Outliers", "🔥 Correlations", "📉 Distributions", "📦 Categorical", "✂️ Split Info"]
@@ -207,11 +210,13 @@ def page_eda():
             st.dataframe(eda_gen.generate_summary_statistics(), use_container_width=True)
     
     with tabs[1]: # Missing
-        fig, missing_df, global_pct = eda_gen.generate_missing_value_analysis()
+        fig, missing_analysis = eda_gen.generate_missing_value_analysis()
+        # Display global missing percent prominently
+        st.metric("Global Missing Percentage", f"{missing_analysis['global_missing_percent']}%")
         if fig:
             st.plotly_chart(fig, use_container_width=True)
             with st.expander("View Missing Data Details"):
-                st.dataframe(missing_df, use_container_width=True)
+                st.dataframe(pd.DataFrame(missing_analysis['per_column']), use_container_width=True)
         else:
             st.success("✨ This dataset is clean! No missing values detected.")
             
@@ -256,6 +261,7 @@ def page_eda():
         with c1:
             st.metric("Train Samples", summary['Train Samples'])
             st.metric("Test Samples", summary['Test Samples'])
+            st.metric("Test Size", f"{summary['Test Ratio %']}%")
         with c2:
             st.plotly_chart(fig, use_container_width=True)
 
@@ -283,6 +289,12 @@ def page_issue_detection():
     df = st.session_state.df
     target_col = st.session_state.get('target_column')
     
+    # Infer feature types for UI display
+    from src.utils.feature_type_inference import FeatureTypeInference
+    ft_infer = FeatureTypeInference(df, target_column=target_col)
+    feature_types = ft_infer.infer_types()
+    st.session_state.feature_types = feature_types
+    
     # Run Detection
     detector = IssueDetector(df, target_col)
     issues, suggestions = detector.detect_all_issues()
@@ -305,23 +317,30 @@ def page_issue_detection():
         for grp_name, grp_issues in issue_groups.items():
             with st.expander(f"🔴 {grp_name} ({len(grp_issues)})", expanded=True):
                 for i, issue in enumerate(grp_issues):
-                    col_issue, col_fix = st.columns([2, 1])
+                    col_issue, col_ftype, col_fix = st.columns([2, 1, 1])
                     with col_issue:
                         st.markdown(f"**Column:** `{issue.get('column', 'Global')}`")
                         st.text(f"Details: {issue}")
+                    
+                    with col_ftype:
+                        # Display feature type from inference
+                        col_name = issue.get('column')
+                        if col_name and col_name in feature_types:
+                            ftype = feature_types[col_name].get('type', 'unknown')
+                            st.caption(f"Type: **{ftype}**")
                     
                     with col_fix:
                         # Find suggestion
                         sug = next((s for s in suggestions if s['type'] == grp_name), None)
                         if sug:
                             options = sug['options']
-                            decision_key = f"{grp_name}_{i}"
+                            decision_key = f"{grp_name}_{i}_{issue.get('column', 'global')}"
                             
                             # Retrieve previous decision or default
                             prev_decision = st.session_state.user_decisions.get(decision_key, options[0])
                             
                             choice = st.selectbox(
-                                "Select Action:", 
+                                "Action", 
                                 options, 
                                 key=f"sel_{decision_key}",
                                 index=options.index(prev_decision) if prev_decision in options else 0
@@ -391,7 +410,11 @@ def page_preprocessing_config():
             try:
                 st.write("📥 Ingesting Data...")
                 data_ingestor = DataIngestion()
-                train_path, test_path, eda_path = data_ingestor.initiate_data_ingestion(st.session_state.df)
+                # Pass test_size from config
+                test_size = st.session_state.preprocessing_config.get('test_size', 0.2)
+                train_path, test_path, eda_path = data_ingestor.initiate_data_ingestion(
+                    st.session_state.df, test_size=test_size
+                )
                 
                 st.session_state.train_path = train_path
                 st.session_state.test_path = test_path
@@ -404,12 +427,26 @@ def page_preprocessing_config():
                     encoding_strategy=st.session_state.preprocessing_config.get('encoding_strategy', 'OneHotEncoder')
                 )
                 
-                train_arr, test_arr, _ = data_transformer.initiate_data_transformation(
-                    train_path, test_path, 'classification', st.session_state.get('target_column')
+                # Pass issues, user_decisions, and test_size to transformation
+                train_arr, test_arr, preproc_path, preprocessing_log, class_weights = data_transformer.initiate_data_transformation(
+                    df=st.session_state.df,
+                    target_column_name=st.session_state.get('target_column'),
+                    issues=st.session_state.issues,
+                    user_decisions=st.session_state.user_decisions,
+                    test_size=test_size,
+                    random_state=42
                 )
                 
+                # Store preprocessing decisions and log
+                st.session_state.preprocessing_log = preprocessing_log
+                st.session_state.class_weights = class_weights
                 st.session_state.train_array = train_arr
                 st.session_state.test_array = test_arr
+                
+                st.write(f"✅ Preprocessing applied: {len(preprocessing_log)} steps")
+                with st.expander("View Preprocessing Log"):
+                    for step in preprocessing_log:
+                        st.json(step)
                 
                 status.update(label="✅ Preprocessing Complete!", state="complete", expanded=False)
                 time.sleep(1)
@@ -455,17 +492,18 @@ def page_model_training():
                 
                 st.write("🔧 Optimizing Hyperparameters...")
                 
-                # --- FIXED CODE SECTION ---
-                # 1. Capture the tuple returned by the trainer (Report, BestModelName)
+                # Train model and capture results
                 train_results = model_trainer.initiate_model_trainer(
                     st.session_state.train_array,
                     st.session_state.test_array,
-                    'classification'
+                    'classification',
+                    search_type='grid',
+                    class_weights=st.session_state.class_weights
                 )
 
-                # 2. Extract ONLY the report dictionary (index 0) and store it
-                # This fixes the tuple unpacking errors and copy() errors later
-                st.session_state.model_results = train_results[0]
+                # Extract model report dict and best model name
+                st.session_state.model_results = train_results[0]  # Full metrics dict
+                st.session_state.best_model_name = train_results[1]  # Best model name
                 
                 # 3. Extract X_test and y_test for ROC curve visualization
                 test_array = st.session_state.test_array
@@ -498,20 +536,26 @@ def page_model_comparison():
         
     results = st.session_state.model_results
     
-    # Process results into DataFrame with robust type checking
+    # Process results into DataFrame - metrics are now full dicts from evaluate_models
     data = []
     for model, metrics in results.items():
         row = {'Model': model}
         
-        # Check if metrics is a dictionary (ideal case)
+        # Metrics should be dictionaries (from step 7 enhancements)
         if isinstance(metrics, dict):
-            row.update(metrics)
-        # If metrics is a list/tuple (e.g. [train_score, test_score])
-        elif isinstance(metrics, (list, tuple, np.ndarray)):
-            # Assuming the last item is the main test score
-            row['Score'] = metrics[-1]
-        # If metrics is just a single number (float/int)
+            # Add scalar metrics directly
+            for key in ['accuracy', 'precision', 'recall', 'f1_score', 'roc_auc', 'training_time']:
+                if key in metrics:
+                    row[key] = metrics[key]
+            # Store model and predictions for later use
+            if 'model' in metrics:
+                row['model'] = metrics['model']
+            if 'confusion_matrix' in metrics:
+                row['confusion_matrix'] = metrics['confusion_matrix']
+            if 'y_test_pred' in metrics:
+                row['y_test_pred'] = metrics['y_test_pred']
         else:
+            # Fallback for non-dict metrics
             row['Score'] = metrics
             
         data.append(row)
@@ -520,24 +564,26 @@ def page_model_comparison():
     st.session_state.comparison_df = df_results
     
     # 1. Best Model Highlight
-    if 'F1-Score' in df_results.columns:
-        best_model = df_results.loc[df_results['F1-Score'].idxmax()]
+    if 'f1_score' in df_results.columns:
+        best_idx = df_results['f1_score'].idxmax()
+        best_model = df_results.loc[best_idx]
         st.session_state.best_model = best_model
         
         st.markdown("### 🥇 Champion Model")
         with st.container(border=True):
             col1, col2, col3, col4 = st.columns(4)
             col1.metric("Algorithm", best_model['Model'])
-            col2.metric("F1 Score", f"{best_model['F1-Score']:.4f}", delta="Best")
-            col3.metric("Accuracy", f"{best_model['Accuracy']:.4f}")
-            col4.metric("Recall", f"{best_model['Recall']:.4f}")
+            col2.metric("F1 Score", f"{best_model['f1_score']:.4f}", delta="Best")
+            col3.metric("Accuracy", f"{best_model['accuracy']:.4f}")
+            col4.metric("Recall", f"{best_model['recall']:.4f}")
 
     # 2. Detailed Table with Styling
     st.markdown("### 📋 Comparative Metrics")
     
-    # Get numeric columns only (exclude non-numeric/object columns)
+    # Get numeric columns only (exclude non-numeric/object columns and non-serializable)
     numeric_cols = df_results.select_dtypes(include=['number']).columns.tolist()
-    exclude_cols = ['Model', 'confusion_matrix', 'model', 'y_test_pred']
+    exclude_cols = ['confusion_matrix', 'model', 'y_test_pred']
+    numeric_cols = [c for c in numeric_cols if c not in exclude_cols]
     
     # Create display dataframe with only numeric columns for styling
     display_df = df_results[['Model'] + numeric_cols].copy()
@@ -571,16 +617,17 @@ def page_model_comparison():
 
     # 3. Visual Comparison
     st.markdown("### 📊 Metric Analysis")
-    metric = st.selectbox("Select Metric to Visualize", ['F1-Score', 'Accuracy', 'Precision', 'Recall', 'Training Time'])
+    available_metrics = [m for m in ['f1_score', 'accuracy', 'precision', 'recall', 'training_time'] if m in df_results.columns]
+    metric = st.selectbox("Select Metric to Visualize", available_metrics) if available_metrics else None
     
-    if metric in df_results.columns:
+    if metric and metric in df_results.columns:
         chart_data = df_results[['Model', metric]].sort_values(metric, ascending=False)
         st.bar_chart(chart_data.set_index('Model'), color="#2C3E50")
 
     # 4. ROC Curves (for binary classification)
     st.markdown("### 📈 ROC Curves (Binary Classification)")
     
-    # Check if we have binary classification and ROC-AUC values
+    # Check if we have binary classification and roc_auc values
     if 'roc_auc' in df_results.columns:
         has_roc = df_results['roc_auc'].notna().any()
         
@@ -592,10 +639,11 @@ def page_model_comparison():
             if hasattr(st.session_state, 'y_test') and hasattr(st.session_state, 'X_test'):
                 y_test = st.session_state.y_test
                 
-                for model_name, metrics in results.items():
-                    if isinstance(metrics, dict) and 'model' in metrics and metrics.get('roc_auc') is not None:
+                for idx, row in df_results.iterrows():
+                    model_name = row['Model']
+                    if pd.notna(row.get('roc_auc')) and 'model' in row:
                         try:
-                            model = metrics['model']
+                            model = row['model']
                             X_test = st.session_state.X_test
                             
                             # Get probability predictions
@@ -637,10 +685,11 @@ def page_model_comparison():
             try:
                 fig_pr, ax_pr = plt.subplots(figsize=(10, 7))
                 
-                for model_name, metrics in results.items():
-                    if isinstance(metrics, dict) and 'model' in metrics:
+                for idx, row in df_results.iterrows():
+                    model_name = row['Model']
+                    if 'model' in row:
                         try:
-                            model = metrics['model']
+                            model = row['model']
                             X_test = st.session_state.X_test
                             
                             # Get probability predictions
@@ -688,9 +737,9 @@ def page_model_comparison():
             cols = st.columns(min(2, len(models_to_show)))
             
             for idx, model_name in enumerate(models_to_show):
-                metrics = results[model_name]
-                if isinstance(metrics, dict) and 'confusion_matrix' in metrics:
-                    cm = metrics['confusion_matrix']
+                row = df_results[df_results['Model'] == model_name]
+                if not row.empty and 'confusion_matrix' in row.columns:
+                    cm = row.iloc[0]['confusion_matrix']
                     
                     with cols[idx % 2]:
                         fig_cm, ax_cm = plt.subplots(figsize=(6, 5))
@@ -716,32 +765,31 @@ def page_model_comparison():
             tree_models_available
         )
         
-        if selected_model in results:
-            metrics = results[selected_model]
-            if isinstance(metrics, dict) and 'model' in metrics:
-                model = metrics['model']
+        row = df_results[df_results['Model'] == selected_model]
+        if not row.empty and 'model' in row.columns:
+            model = row.iloc[0]['model']
+            
+            # Get feature importances
+            if hasattr(model, 'feature_importances_'):
+                importances = model.feature_importances_
                 
-                # Get feature importances
-                if hasattr(model, 'feature_importances_'):
-                    importances = model.feature_importances_
-                    
-                    # Create feature importance dataframe
-                    feature_names = [f"Feature {i}" for i in range(len(importances))]
-                    importance_df = pd.DataFrame({
-                        'Feature': feature_names,
-                        'Importance': importances
-                    }).sort_values('Importance', ascending=True).tail(10)
-                    
-                    # Plot feature importance
-                    fig_fi, ax_fi = plt.subplots(figsize=(10, 6))
-                    ax_fi.barh(importance_df['Feature'], importance_df['Importance'], color='#3498db')
-                    ax_fi.set_xlabel('Importance Score', fontsize=12)
-                    ax_fi.set_title(f'Top 10 Feature Importances - {selected_model}', fontsize=14, fontweight='bold')
-                    ax_fi.grid(True, alpha=0.3, axis='x')
-                    
-                    st.pyplot(fig_fi)
-                else:
-                    st.info(f"ℹ️ {selected_model} does not have feature importance scores.")
+                # Create feature importance dataframe
+                feature_names = [f"Feature {i}" for i in range(len(importances))]
+                importance_df = pd.DataFrame({
+                    'Feature': feature_names,
+                    'Importance': importances
+                }).sort_values('Importance', ascending=True).tail(10)
+                
+                # Plot feature importance
+                fig_fi, ax_fi = plt.subplots(figsize=(10, 6))
+                ax_fi.barh(importance_df['Feature'], importance_df['Importance'], color='#3498db')
+                ax_fi.set_xlabel('Importance Score', fontsize=12)
+                ax_fi.set_title(f'Top 10 Feature Importances - {selected_model}', fontsize=14, fontweight='bold')
+                ax_fi.grid(True, alpha=0.3, axis='x')
+                
+                st.pyplot(fig_fi)
+            else:
+                st.info(f"ℹ️ {selected_model} does not have feature importance scores.")
     else:
         st.info("ℹ️ Feature importance visualization only available for tree-based models (Random Forest, Decision Tree, AdaBoost).")
 
