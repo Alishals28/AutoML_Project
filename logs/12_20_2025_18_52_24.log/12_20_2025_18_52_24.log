@@ -1,0 +1,4 @@
+[ 2025-12-20 18:52:24,987 ] 28 root - INFO - Entered the data ingestion component
+[ 2025-12-20 18:52:25,003 ] 34 root - INFO - Saved raw dataset to artifacts
+[ 2025-12-20 18:52:25,017 ] 40 root - INFO - Saved train/test splits to artifacts
+[ 2025-12-20 18:52:33,120 ] 46 root - INFO - Generated EDA report
