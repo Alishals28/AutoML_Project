@@ -167,12 +167,19 @@ class ReportGenerator:
         if not self.feature_types:
             return "<p>⚠️ No feature type information available.</p>"
         
-        # Count by type
+        # Normalize feature types: handle both str and dict formats
+        # Expected formats:
+        # - {'col': 'continuous_numeric'}
+        # - {'col': {'type': 'continuous_numeric', ...metadata}}
         type_counts = {}
+        normalized_items = []
         for col, ftype in self.feature_types.items():
-            if ftype not in type_counts:
-                type_counts[ftype] = []
-            type_counts[ftype].append(col)
+            if isinstance(ftype, dict):
+                ftype_name = ftype.get('type', 'unknown')
+            else:
+                ftype_name = str(ftype)
+            type_counts.setdefault(ftype_name, []).append(col)
+            normalized_items.append((col, ftype_name))
         
         html = """
         <div class="metric-box">
@@ -185,8 +192,8 @@ class ReportGenerator:
         
         html += "</ul><h3>📋 Feature Type Details</h3><table><thead><tr><th>Feature</th><th>Type</th></tr></thead><tbody>"
         
-        for col, ftype in sorted(self.feature_types.items()):
-            html += f"<tr><td>{col}</td><td>{ftype}</td></tr>"
+        for col, ftype_name in sorted(normalized_items):
+            html += f"<tr><td>{col}</td><td>{ftype_name}</td></tr>"
         
         html += "</tbody></table></div>"
         return html
