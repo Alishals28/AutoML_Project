@@ -17,6 +17,7 @@ from src.logger import logging
 from src.utils import save_object
 from src.utils.feature_type_inference import FeatureTypeInference
 from src.utils.preprocessing_applicator import PreprocessingApplicator
+from src.utils.preprocessing_utils import normalize_missing_and_strip
 
 
 @dataclass
@@ -60,7 +61,7 @@ class DataTransformation:
                 encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
                 cat_scaler = "passthrough"
             else:
-                encoder = OneHotEncoder(handle_unknown="ignore")
+                encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
                 cat_scaler = StandardScaler(with_mean=False)
 
             cat_pipeline = Pipeline(
@@ -104,7 +105,18 @@ class DataTransformation:
                 choice = user_decisions[issue_id]
 
             if issue_type == "Missing Values":
-                missing_config[col] = choice or "median"
+                # use feature_type that IssueDetector already provides
+                ftype = issue.get("feature_type", None)
+
+                if choice:
+                    missing_config[col] = choice
+                else:
+                    # numeric -> median, categorical -> mode
+                    if ftype in ("continuous_numeric", "discrete_numeric"):
+                        missing_config[col] = "median"
+                    else:
+                        missing_config[col] = "mode"
+                        
             elif issue_type == "Outliers":
                 outlier_config[col] = {
                     "action": choice or "cap (IQR)",
@@ -179,16 +191,48 @@ class DataTransformation:
             if target_column_name is None or target_column_name not in data_df.columns:
                 raise CustomException("Target column name must be provided and exist in the dataframe.")
 
+            # Normalize strings/missing markers early
+            data_df = normalize_missing_and_strip(data_df)
+
             ft_infer = FeatureTypeInference(data_df, target_column=target_column_name)
             feature_types = ft_infer.infer_types()
+
+            # Group columns by inferred type (excluding target)
+            numeric_cols = []
+            categorical_cols = []
+            datetime_cols = []
+            id_like_cols = []
+            for col, info in feature_types.items():
+                ctype = info.get("type")
+                if ctype in ["continuous_numeric", "discrete_numeric"]:
+                    numeric_cols.append(col)
+                elif ctype in ["categorical_text", "categorical_encoded", "binary"]:
+                    categorical_cols.append(col)
+                elif ctype == "datetime":
+                    datetime_cols.append(col)
+                elif ctype == "id_like":
+                    id_like_cols.append(col)
+
+            logging.info(
+                f"Column groups → numeric:{numeric_cols}, categorical:{categorical_cols}, "
+                f"datetime(dropped):{datetime_cols}, id_like(dropped):{id_like_cols}"
+            )
+
+            # Drop datetime and id-like columns by default to avoid blowups/leakage
+            drop_cols = datetime_cols + id_like_cols
+            if drop_cols:
+                data_df = data_df.drop(columns=drop_cols)
+                feature_types = {k: v for k, v in feature_types.items() if k not in drop_cols}
 
             missing_cfg, outlier_cfg, constant_cfg, imbalance_choice = self._build_configs_from_issues(
                 issues, user_decisions
             )
 
-            # Safety: restrict outlier handling to numeric columns only
-            numeric_cols = set(data_df.select_dtypes(include=[np.number]).columns)
-            outlier_cfg = {col: cfg for col, cfg in outlier_cfg.items() if col in numeric_cols}
+            # Safety: restrict outlier handling to continuous numeric columns only
+            continuous_cols = {
+                col for col, info in feature_types.items() if info.get("type") == "continuous_numeric"
+            }
+            outlier_cfg = {col: cfg for col, cfg in outlier_cfg.items() if col in continuous_cols}
             if imbalance_action:
                 imbalance_choice = imbalance_action
 
@@ -204,6 +248,17 @@ class DataTransformation:
             processed_df = applicator.get_processed_dataframe()
             preprocessing_log = applicator.get_preprocessing_log()
 
+            # Log column grouping decisions
+            preprocessing_log.append(
+                {
+                    "action": "column_grouping",
+                    "numeric_columns": numeric_cols,
+                    "categorical_columns": categorical_cols,
+                    "dropped_datetime_columns": datetime_cols,
+                    "dropped_id_like_columns": id_like_cols,
+                }
+            )
+
             stratify = processed_df[target_column_name] if problem_type == "classification" else None
             train_df, test_df = train_test_split(
                 processed_df,
@@ -212,12 +267,8 @@ class DataTransformation:
                 stratify=stratify,
             )
 
-            numerical_columns = train_df.select_dtypes(include=[np.number]).columns.tolist()
-            categorical_columns = train_df.select_dtypes(exclude=[np.number]).columns.tolist()
-            if target_column_name in numerical_columns:
-                numerical_columns.remove(target_column_name)
-            if target_column_name in categorical_columns:
-                categorical_columns.remove(target_column_name)
+            numerical_columns = [c for c in numeric_cols if c in train_df.columns and c != target_column_name]
+            categorical_columns = [c for c in categorical_cols if c in train_df.columns and c != target_column_name]
 
             preprocessor = self._build_preprocessor(numerical_columns, categorical_columns)
 
@@ -276,12 +327,35 @@ class DataTransformation:
 
     def _transform_after_split(self, train_df, test_df, problem_type, target_column_name):
         try:
-            numerical_columns = train_df.select_dtypes(include=[np.number]).columns.tolist()
-            categorical_columns = train_df.select_dtypes(exclude=[np.number]).columns.tolist()
+            # Normalize and infer types on combined data to keep consistency
+            train_df = normalize_missing_and_strip(train_df)
+            test_df = normalize_missing_and_strip(test_df)
+            combined = pd.concat([train_df, test_df], axis=0)
+            ft_infer = FeatureTypeInference(combined, target_column=target_column_name)
+            feature_types = ft_infer.infer_types()
 
-            if target_column_name:
-                numerical_columns = [c for c in numerical_columns if c != target_column_name]
-                categorical_columns = [c for c in categorical_columns if c != target_column_name]
+            numeric_cols = []
+            categorical_cols = []
+            datetime_cols = []
+            id_like_cols = []
+            for col, info in feature_types.items():
+                ctype = info.get("type")
+                if ctype in ["continuous_numeric", "discrete_numeric"]:
+                    numeric_cols.append(col)
+                elif ctype in ["categorical_text", "categorical_encoded", "binary"]:
+                    categorical_cols.append(col)
+                elif ctype == "datetime":
+                    datetime_cols.append(col)
+                elif ctype == "id_like":
+                    id_like_cols.append(col)
+
+            drop_cols = datetime_cols + id_like_cols
+            if drop_cols:
+                train_df = train_df.drop(columns=drop_cols)
+                test_df = test_df.drop(columns=drop_cols)
+
+            numerical_columns = [c for c in numeric_cols if c in train_df.columns and c != target_column_name]
+            categorical_columns = [c for c in categorical_cols if c in train_df.columns and c != target_column_name]
 
             preprocessor = self._build_preprocessor(numerical_columns, categorical_columns)
 

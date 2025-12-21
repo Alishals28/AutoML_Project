@@ -57,6 +57,15 @@ class FeatureTypeInference:
             logging.error(f"Error in feature type inference: {str(e)}")
             raise CustomException(f"Feature type inference failed: {str(e)}")
     
+    def _try_parse_datetime(self, series: pd.Series) -> bool:
+        """Return True if >=90% of non-null values parse as datetime."""
+        non_null = series.dropna()
+        if len(non_null) == 0:
+            return False
+        parsed = pd.to_datetime(non_null, errors="coerce", infer_datetime_format=True)
+        success_ratio = parsed.notna().mean()
+        return success_ratio >= 0.9
+
     def _classify_feature(self, col):
         """
         Classify a single feature based on dtype, cardinality, and range.
@@ -84,43 +93,81 @@ class FeatureTypeInference:
         
         logging.debug(f"Classifying column '{col}': dtype={dtype}, n_unique={n_unique}, unique_ratio={unique_ratio:.3f}, n_missing={n_missing}")
         
-        # ===== RULE 1: Object/string dtype → categorical_text =====
-        if dtype == 'object' or pd.api.types.is_categorical_dtype(data):
-            result = {
-                'type': 'categorical_text',
-                'n_unique': int(n_unique),
-                'n_missing': int(n_missing),
-                'unique_ratio': round(unique_ratio, 4),
-                'example_values': data.dropna().unique()[:3].tolist() if non_null_count > 0 else []
-            }
-            logging.debug(f"  → classified as: categorical_text")
-            return result
-        
-        # ===== RULE 2: Exactly 2 unique values → binary =====
-        if n_unique == 2:
+        # ===== RULE 0: Booleans → binary =====
+        if pd.api.types.is_bool_dtype(dtype):
             values = sorted(data.dropna().unique().tolist())
             value_counts = data.value_counts().to_dict()
-            result = {
+            return {
                 'type': 'binary',
                 'values': values,
                 'n_missing': int(n_missing),
                 'value_counts': {str(k): int(v) for k, v in value_counts.items()},
                 'unique_ratio': round(unique_ratio, 4)
             }
-            logging.debug(f"  → classified as: binary with values {values}")
-            return result
+
+        # ===== RULE 1: Object/Category dtype → maybe datetime / id_like / categorical_text =====
+        if dtype == 'object' or pd.api.types.is_categorical_dtype(data):
+            # datetime check
+            if self._try_parse_datetime(data):
+                return {
+                    'type': 'datetime',
+                    'n_unique': int(n_unique),
+                    'n_missing': int(n_missing),
+                    'unique_ratio': round(unique_ratio, 4)
+                }
+            # id-like check
+            if unique_ratio >= 0.95:
+                return {
+                    'type': 'id_like',
+                    'n_unique': int(n_unique),
+                    'n_missing': int(n_missing),
+                    'unique_ratio': round(unique_ratio, 4),
+                    'example_values': data.dropna().unique()[:3].tolist() if non_null_count > 0 else [],
+                    'note': 'High cardinality string'
+                }
+            # default categorical text
+            return {
+                'type': 'categorical_text',
+                'n_unique': int(n_unique),
+                'n_missing': int(n_missing),
+                'unique_ratio': round(unique_ratio, 4),
+                'example_values': data.dropna().unique()[:3].tolist() if non_null_count > 0 else []
+            }
+
+        # ===== RULE 2: Exactly 2 unique values → binary =====
+        if n_unique == 2:
+            values = sorted(data.dropna().unique().tolist())
+            value_counts = data.value_counts().to_dict()
+            return {
+                'type': 'binary',
+                'values': values,
+                'n_missing': int(n_missing),
+                'value_counts': {str(k): int(v) for k, v in value_counts.items()},
+                'unique_ratio': round(unique_ratio, 4)
+            }
         
         # ===== RULE 3: Numeric dtype =====
         if pd.api.types.is_numeric_dtype(dtype):
             
             # === Rule 3a: Integer dtype handling ===
             if dtype in ['int64', 'int32', 'int16', 'int8']:
-                
-                # Rule 3a-i: Small cardinality (≤15) → categorical_encoded
-                if n_unique <= 15:
+                # Very high cardinality ints → id_like
+                if unique_ratio >= 0.95:
+                    return {
+                        'type': 'id_like',
+                        'n_unique': int(n_unique),
+                        'unique_ratio': round(unique_ratio, 4),
+                        'n_missing': int(n_missing),
+                        'min': float(data.min()),
+                        'max': float(data.max()),
+                        'note': 'High cardinality int - likely ID'
+                    }
+                # VERY low cardinality ints (≤10) → categorical_encoded
+                # But only if the range is small relative to unique values (suggests codes, not measurements)
+                if n_unique <= 10:
                     values = sorted(data.dropna().unique().tolist())
                     value_counts = data.value_counts().to_dict()
-                    result = {
+                    return {
                         'type': 'categorical_encoded',
                         'n_unique': int(n_unique),
                         'values': values,
@@ -128,28 +175,10 @@ class FeatureTypeInference:
                         'value_counts': {str(k): int(v) for k, v in value_counts.items()},
                         'unique_ratio': round(unique_ratio, 4)
                     }
-                    logging.debug(f"  → classified as: categorical_encoded (int with n_unique={n_unique})")
-                    return result
-                
-                # Rule 3a-ii: Very high cardinality (>80%) → id_like (not suitable for modeling)
-                elif unique_ratio > 0.80:
-                    result = {
-                        'type': 'id_like',
-                        'n_unique': int(n_unique),
-                        'unique_ratio': round(unique_ratio, 4),
-                        'n_missing': int(n_missing),
-                        'min': float(data.min()),
-                        'max': float(data.max()),
-                        'note': 'High cardinality - likely ID column'
-                    }
-                    logging.debug(f"  → classified as: id_like (unique_ratio={unique_ratio:.3f})")
-                    return result
-                
-                # Rule 3a-iii: Moderate-to-high cardinality (>15 unique AND >3% of data)
-                # This distinguishes continuous measurements (spread across data) from 
-                # discrete counts (concentrated in few values)
-                elif n_unique > 15 and unique_ratio > 0.03:
-                    result = {
+                # Otherwise treat as numeric (continuous or discrete)
+                # High unique count or spread → continuous_numeric
+                if n_unique > 20 or (data.max() - data.min()) > 50:
+                    return {
                         'type': 'continuous_numeric',
                         'n_unique': int(n_unique),
                         'min': float(data.min()),
@@ -162,34 +191,28 @@ class FeatureTypeInference:
                         'q3': float(data.quantile(0.75)),
                         'n_missing': int(n_missing),
                         'unique_ratio': round(unique_ratio, 4),
-                        'note': 'Integer dtype but represents continuous measurement'
+                        'note': 'Integer with sufficient spread/cardinality'
                     }
-                    logging.debug(f"  → classified as: continuous_numeric (int with n_unique={n_unique}, unique_ratio={unique_ratio:.3f})")
-                    return result
-                
-                # Rule 3a-iv: Moderate cardinality but concentrated → discrete_numeric
-                else:
-                    result = {
-                        'type': 'discrete_numeric',
-                        'n_unique': int(n_unique),
-                        'min': float(data.min()),
-                        'max': float(data.max()),
-                        'range': float(data.max() - data.min()),
-                        'n_missing': int(n_missing),
-                        'mean': float(data.mean()),
-                        'median': float(data.median()),
-                        'std': float(data.std()),
-                        'unique_ratio': round(unique_ratio, 4),
-                        'note': 'Integer with moderate cardinality (discrete counts or ordinal)'
-                    }
-                    logging.debug(f"  → classified as: discrete_numeric (n_unique={n_unique}, unique_ratio={unique_ratio:.3f})")
-                    return result
-            
+                # Moderate cardinality and range → discrete_numeric
+                return {
+                    'type': 'discrete_numeric',
+                    'n_unique': int(n_unique),
+                    'min': float(data.min()),
+                    'max': float(data.max()),
+                    'range': float(data.max() - data.min()),
+                    'n_missing': int(n_missing),
+                    'mean': float(data.mean()),
+                    'median': float(data.median()),
+                    'std': float(data.std()),
+                    'unique_ratio': round(unique_ratio, 4),
+                    'note': 'Integer with moderate cardinality'
+                }
+
             # === Rule 3e: Float dtype → continuous_numeric (unless few uniques) ===
             else:
                 if n_unique <= 15:  # Unusual: float with few uniques
                     values = sorted(data.dropna().unique().tolist())
-                    result = {
+                    return {
                         'type': 'categorical_encoded',
                         'n_unique': int(n_unique),
                         'values': values,
@@ -197,25 +220,20 @@ class FeatureTypeInference:
                         'unique_ratio': round(unique_ratio, 4),
                         'note': 'Float dtype but low cardinality'
                     }
-                    logging.debug(f"  → classified as: categorical_encoded (float with low cardinality)")
-                    return result
-                else:
-                    result = {
-                        'type': 'continuous_numeric',
-                        'n_unique': int(n_unique),
-                        'min': float(data.min()),
-                        'max': float(data.max()),
-                        'range': float(data.max() - data.min()),
-                        'mean': float(data.mean()),
-                        'median': float(data.median()),
-                        'std': float(data.std()),
-                        'q1': float(data.quantile(0.25)),
-                        'q3': float(data.quantile(0.75)),
-                        'n_missing': int(n_missing),
-                        'unique_ratio': round(unique_ratio, 4)
-                    }
-                    logging.debug(f"  → classified as: continuous_numeric")
-                    return result
+                return {
+                    'type': 'continuous_numeric',
+                    'n_unique': int(n_unique),
+                    'min': float(data.min()),
+                    'max': float(data.max()),
+                    'range': float(data.max() - data.min()),
+                    'mean': float(data.mean()),
+                    'median': float(data.median()),
+                    'std': float(data.std()),
+                    'q1': float(data.quantile(0.25)),
+                    'q3': float(data.quantile(0.75)),
+                    'n_missing': int(n_missing),
+                    'unique_ratio': round(unique_ratio, 4)
+                }
         
         # ===== FALLBACK =====
         result = {

@@ -331,17 +331,21 @@ def page_issue_detection():
                     
                     with col_fix:
                         # Find suggestion
-                        sug = next((s for s in suggestions if s['type'] == grp_name), None)
+                        issue_id = issue.get("issue_id")
+
+                        sug = next((s for s in suggestions if s.get("issue_id") == issue_id), None)
                         if sug:
-                            options = sug['options']
-                            decision_key = f"{grp_name}_{i}_{issue.get('column', 'global')}"
-                            
-                            # Retrieve previous decision or default
-                            prev_decision = st.session_state.user_decisions.get(decision_key, options[0])
-                            
+                            options = sug["options"]
+                            recommended = sug.get("recommended", options[0])
+
+                            # ✅ decision_key MUST equal issue_id so DataTransformation can find it
+                            decision_key = issue_id
+
+                            prev_decision = st.session_state.user_decisions.get(decision_key, recommended)
+
                             choice = st.selectbox(
-                                "Action", 
-                                options, 
+                                "Action",
+                                options,
                                 key=f"sel_{decision_key}",
                                 index=options.index(prev_decision) if prev_decision in options else 0
                             )
@@ -375,6 +379,15 @@ def page_preprocessing_config():
                 ["median", "mean", "mode", "constant"],
                 help="Median is robust to outliers."
             )
+            # Ask for constant value only if 'constant' is selected
+            if st.session_state.preprocessing_config['missing_strategy'] == "constant":
+                const_val = st.text_input(
+                    "Constant value to fill missing values",
+                    value="Unknown",
+                    help="Used to replace missing values (especially useful for categorical/text columns)."
+                )
+                st.session_state.preprocessing_config['missing_constant_value'] = const_val
+
             st.session_state.preprocessing_config['outlier_strategy'] = st.selectbox(
                 "Outlier Handling",
                 ["capping", "removal", "no_action"],
@@ -412,6 +425,7 @@ def page_preprocessing_config():
                 data_ingestor = DataIngestion()
                 # Pass test_size from config
                 test_size = st.session_state.preprocessing_config.get('test_size', 0.2)
+                st.write("DEBUG user_decisions keys:", list(st.session_state.user_decisions.keys()))
                 train_path, test_path, eda_path = data_ingestor.initiate_data_ingestion(
                     st.session_state.df, test_size=test_size
                 )

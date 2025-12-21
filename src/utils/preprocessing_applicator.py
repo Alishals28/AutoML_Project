@@ -72,6 +72,14 @@ class PreprocessingApplicator:
             
             feature_type = self.feature_types.get(col, {}).get('type', 'unknown')
             
+            # SAFETY: prevent numeric strategies on non-numeric columns
+            if strategy in ("median", "mean") and feature_type not in ("continuous_numeric", "discrete_numeric"):
+                logging.warning(
+                    f"Invalid imputation strategy '{strategy}' for non-numeric column '{col}' "
+                    f"(type={feature_type}). Falling back to mode."
+                )
+                strategy = "mode"
+            
             if strategy == 'drop_rows':
                 # Drop rows with missing values
                 self.df = self.df.dropna(subset=[col])
@@ -125,9 +133,10 @@ class PreprocessingApplicator:
                 logging.info(f"Imputed {missing_count} missing values in '{col}' with mean={mean_value:.4f}")
             
             elif strategy == 'mode':
-                mode_value = self.df[col].mode()[0] if len(self.df[col].mode()) > 0 else self.df[col].iloc[0]
-                self.df[col].fillna(mode_value, inplace=True)
-                
+                m = self.df[col].mode(dropna=True)
+                mode_value = m.iloc[0] if len(m) > 0 else "Unknown"
+                self.df[col] = self.df[col].fillna(mode_value)
+              
                 log_entry = {
                     'step': 'missing_value_imputation',
                     'column': col,
