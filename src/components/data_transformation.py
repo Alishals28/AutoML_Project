@@ -185,6 +185,10 @@ class DataTransformation:
             missing_cfg, outlier_cfg, constant_cfg, imbalance_choice = self._build_configs_from_issues(
                 issues, user_decisions
             )
+
+            # Safety: restrict outlier handling to numeric columns only
+            numeric_cols = set(data_df.select_dtypes(include=[np.number]).columns)
+            outlier_cfg = {col: cfg for col, cfg in outlier_cfg.items() if col in numeric_cols}
             if imbalance_action:
                 imbalance_choice = imbalance_action
 
