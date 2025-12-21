@@ -1,0 +1,89 @@
+[ 2025-12-21 01:45:32,594 ] 36 root - INFO - FeatureTypeInference initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:45:32,800 ] 53 root - INFO - Feature type inference complete. Classified 14 features
+[ 2025-12-21 01:45:32,801 ] 49 root - INFO - IssueDetector initialized for dataset with 32561 rows, 15 columns
+[ 2025-12-21 01:45:32,801 ] 36 root - INFO - FeatureTypeInference initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:45:32,987 ] 53 root - INFO - Feature type inference complete. Classified 14 features
+[ 2025-12-21 01:45:32,987 ] 54 root - INFO - Feature types inferred: 14 features classified
+[ 2025-12-21 01:45:32,987 ] 34 root - INFO - OutlierDetector initialized with 32561 rows
+[ 2025-12-21 01:45:32,989 ] 186 root - INFO - ConstantFeatureDetector initialized (threshold=0.99)
+[ 2025-12-21 01:45:32,989 ] 69 root - INFO - Starting comprehensive issue detection...
+[ 2025-12-21 01:45:32,989 ] 83 root - INFO - Detecting missing values...
+[ 2025-12-21 01:45:33,029 ] 140 root - INFO - Found missing values in 3 columns (global: 0.87%)
+[ 2025-12-21 01:45:33,029 ] 147 root - INFO - Detecting outliers (continuous_numeric features only)...
+[ 2025-12-21 01:45:33,038 ] 136 root - INFO - Outlier detection for 'fnlwgt': 992 outliers (3.05%), severity=medium
+[ 2025-12-21 01:45:33,039 ] 161 root - INFO - Detected outliers in 1 columns
+[ 2025-12-21 01:45:33,039 ] 194 root - INFO - Detected outliers in 1 columns
+[ 2025-12-21 01:45:33,040 ] 299 root - INFO - Detecting constant/near-constant features...
+[ 2025-12-21 01:45:33,150 ] 266 root - INFO - Detected 0 constant/near-constant features
+[ 2025-12-21 01:45:33,151 ] 338 root - INFO - No constant/near-constant features detected
+[ 2025-12-21 01:45:33,151 ] 203 root - INFO - Checking for class imbalance...
+[ 2025-12-21 01:45:33,166 ] 244 root - INFO - Detected class imbalance (ratio: 3.15:1, severity: medium)
+[ 2025-12-21 01:45:33,166 ] 251 root - INFO - Detecting high cardinality features...
+[ 2025-12-21 01:45:33,167 ] 294 root - INFO - No high cardinality features detected
+[ 2025-12-21 01:45:33,167 ] 77 root - INFO - Issue detection complete. Found 5 issues
+[ 2025-12-21 01:45:40,777 ] 36 root - INFO - FeatureTypeInference initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:45:40,899 ] 53 root - INFO - Feature type inference complete. Classified 14 features
+[ 2025-12-21 01:45:40,900 ] 49 root - INFO - IssueDetector initialized for dataset with 32561 rows, 15 columns
+[ 2025-12-21 01:45:40,900 ] 36 root - INFO - FeatureTypeInference initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:45:41,013 ] 53 root - INFO - Feature type inference complete. Classified 14 features
+[ 2025-12-21 01:45:41,014 ] 54 root - INFO - Feature types inferred: 14 features classified
+[ 2025-12-21 01:45:41,014 ] 34 root - INFO - OutlierDetector initialized with 32561 rows
+[ 2025-12-21 01:45:41,014 ] 186 root - INFO - ConstantFeatureDetector initialized (threshold=0.99)
+[ 2025-12-21 01:45:41,014 ] 69 root - INFO - Starting comprehensive issue detection...
+[ 2025-12-21 01:45:41,014 ] 83 root - INFO - Detecting missing values...
+[ 2025-12-21 01:45:41,032 ] 140 root - INFO - Found missing values in 3 columns (global: 0.87%)
+[ 2025-12-21 01:45:41,032 ] 147 root - INFO - Detecting outliers (continuous_numeric features only)...
+[ 2025-12-21 01:45:41,038 ] 136 root - INFO - Outlier detection for 'fnlwgt': 992 outliers (3.05%), severity=medium
+[ 2025-12-21 01:45:41,044 ] 161 root - INFO - Detected outliers in 1 columns
+[ 2025-12-21 01:45:41,045 ] 194 root - INFO - Detected outliers in 1 columns
+[ 2025-12-21 01:45:41,045 ] 299 root - INFO - Detecting constant/near-constant features...
+[ 2025-12-21 01:45:41,114 ] 266 root - INFO - Detected 0 constant/near-constant features
+[ 2025-12-21 01:45:41,114 ] 338 root - INFO - No constant/near-constant features detected
+[ 2025-12-21 01:45:41,114 ] 203 root - INFO - Checking for class imbalance...
+[ 2025-12-21 01:45:41,122 ] 244 root - INFO - Detected class imbalance (ratio: 3.15:1, severity: medium)
+[ 2025-12-21 01:45:41,123 ] 251 root - INFO - Detecting high cardinality features...
+[ 2025-12-21 01:45:41,123 ] 294 root - INFO - No high cardinality features detected
+[ 2025-12-21 01:45:41,123 ] 77 root - INFO - Issue detection complete. Found 5 issues
+[ 2025-12-21 01:45:45,086 ] 36 root - INFO - FeatureTypeInference initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:45:45,210 ] 53 root - INFO - Feature type inference complete. Classified 14 features
+[ 2025-12-21 01:45:45,210 ] 49 root - INFO - IssueDetector initialized for dataset with 32561 rows, 15 columns
+[ 2025-12-21 01:45:45,211 ] 36 root - INFO - FeatureTypeInference initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:45:45,331 ] 53 root - INFO - Feature type inference complete. Classified 14 features
+[ 2025-12-21 01:45:45,332 ] 54 root - INFO - Feature types inferred: 14 features classified
+[ 2025-12-21 01:45:45,332 ] 34 root - INFO - OutlierDetector initialized with 32561 rows
+[ 2025-12-21 01:45:45,332 ] 186 root - INFO - ConstantFeatureDetector initialized (threshold=0.99)
+[ 2025-12-21 01:45:45,332 ] 69 root - INFO - Starting comprehensive issue detection...
+[ 2025-12-21 01:45:45,332 ] 83 root - INFO - Detecting missing values...
+[ 2025-12-21 01:45:45,361 ] 140 root - INFO - Found missing values in 3 columns (global: 0.87%)
+[ 2025-12-21 01:45:45,362 ] 147 root - INFO - Detecting outliers (continuous_numeric features only)...
+[ 2025-12-21 01:45:45,371 ] 136 root - INFO - Outlier detection for 'fnlwgt': 992 outliers (3.05%), severity=medium
+[ 2025-12-21 01:45:45,371 ] 161 root - INFO - Detected outliers in 1 columns
+[ 2025-12-21 01:45:45,371 ] 194 root - INFO - Detected outliers in 1 columns
+[ 2025-12-21 01:45:45,371 ] 299 root - INFO - Detecting constant/near-constant features...
+[ 2025-12-21 01:45:45,436 ] 266 root - INFO - Detected 0 constant/near-constant features
+[ 2025-12-21 01:45:45,437 ] 338 root - INFO - No constant/near-constant features detected
+[ 2025-12-21 01:45:45,437 ] 203 root - INFO - Checking for class imbalance...
+[ 2025-12-21 01:45:45,443 ] 244 root - INFO - Detected class imbalance (ratio: 3.15:1, severity: medium)
+[ 2025-12-21 01:45:45,443 ] 251 root - INFO - Detecting high cardinality features...
+[ 2025-12-21 01:45:45,443 ] 294 root - INFO - No high cardinality features detected
+[ 2025-12-21 01:45:45,443 ] 77 root - INFO - Issue detection complete. Found 5 issues
+[ 2025-12-21 01:45:47,786 ] 28 root - INFO - Entered the data ingestion component
+[ 2025-12-21 01:45:48,216 ] 34 root - INFO - Saved raw dataset to artifacts
+[ 2025-12-21 01:45:48,663 ] 40 root - INFO - Saved train/test splits to artifacts
+[ 2025-12-21 01:46:18,258 ] 46 root - INFO - Generated EDA report
+[ 2025-12-21 01:46:18,269 ] 36 root - INFO - FeatureTypeInference initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:46:18,366 ] 53 root - INFO - Feature type inference complete. Classified 14 features
+[ 2025-12-21 01:46:18,373 ] 42 root - INFO - PreprocessingApplicator initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:46:18,374 ] 55 root - INFO - Applying missing value imputation...
+[ 2025-12-21 01:46:18,381 ] 459 root - ERROR - Pipeline Error: Error occured in python script name [F:\ML\Project\AutoML_Project\src\components\data_transformation.py] line number [192] error message[Cannot convert [' State-gov' ' Self-emp-not-inc' ' Private' ... ' Private' ' Private'
+ ' Self-emp-inc'] to numeric]
+[ 2025-12-21 01:47:15,942 ] 28 root - INFO - Entered the data ingestion component
+[ 2025-12-21 01:47:16,610 ] 34 root - INFO - Saved raw dataset to artifacts
+[ 2025-12-21 01:47:17,538 ] 40 root - INFO - Saved train/test splits to artifacts
+[ 2025-12-21 01:48:00,822 ] 46 root - INFO - Generated EDA report
+[ 2025-12-21 01:48:00,835 ] 36 root - INFO - FeatureTypeInference initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:48:00,957 ] 53 root - INFO - Feature type inference complete. Classified 14 features
+[ 2025-12-21 01:48:00,966 ] 42 root - INFO - PreprocessingApplicator initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:48:00,966 ] 55 root - INFO - Applying missing value imputation...
+[ 2025-12-21 01:48:00,976 ] 459 root - ERROR - Pipeline Error: Error occured in python script name [F:\ML\Project\AutoML_Project\src\components\data_transformation.py] line number [192] error message[Cannot convert [' State-gov' ' Self-emp-not-inc' ' Private' ... ' Private' ' Private'
+ ' Self-emp-inc'] to numeric]
