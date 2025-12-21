@@ -1,0 +1,2 @@
+[ 2025-12-21 01:52:31,383 ] 36 root - INFO - FeatureTypeInference initialized with 32561 rows, 15 columns
+[ 2025-12-21 01:52:31,445 ] 53 root - INFO - Feature type inference complete. Classified 14 features

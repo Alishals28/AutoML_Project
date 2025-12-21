@@ -191,6 +191,11 @@ class PreprocessingApplicator:
                 logging.warning(f"Column '{col}' not found in dataframe")
                 continue
             
+            # Skip categorical columns - outlier handling only for numeric
+            if self.df[col].dtype == 'object' or self.df[col].dtype.name == 'category':
+                logging.warning(f"Skipping outlier handling for categorical column '{col}'")
+                continue
+            
             action = config.get('action') if isinstance(config, dict) else config
             bounds = config.get('bounds', {}) if isinstance(config, dict) else {}
             

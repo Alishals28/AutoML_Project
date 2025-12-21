@@ -1,0 +1,9 @@
+[ 2025-12-21 10:05:21,161 ] 36 root - INFO - FeatureTypeInference initialized with 32561 rows, 15 columns
+[ 2025-12-21 10:05:21,282 ] 53 root - INFO - Feature type inference complete. Classified 14 features
+[ 2025-12-21 10:05:21,290 ] 42 root - INFO - PreprocessingApplicator initialized with 32561 rows, 15 columns
+[ 2025-12-21 10:05:21,290 ] 55 root - INFO - Applying missing value imputation...
+[ 2025-12-21 10:05:21,303 ] 142 root - INFO - Imputed 1836 missing values in 'Workclass' with mode= Private
+[ 2025-12-21 10:05:21,303 ] 337 root - INFO - Applying class imbalance handling: class_weights...
+[ 2025-12-21 10:05:21,306 ] 353 root - INFO - Class weights will be applied during model training: {' <=50K': 24720, ' >50K': 7841}
+[ 2025-12-21 10:05:21,348 ] 73 root - INFO - Categorical columns: ['Workclass', 'Education', 'Martial_Status', 'Occupation', 'Relationship', 'Race', 'Sex', 'Country']
+[ 2025-12-21 10:05:21,348 ] 74 root - INFO - Numerical columns: ['Age', 'fnlwgt', 'Education_Num', 'Capital_Gain', 'Capital_Loss', 'Hours_per_week']

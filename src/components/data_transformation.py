@@ -8,7 +8,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, OrdinalEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler, OrdinalEncoder, LabelEncoder
+from scipy import sparse
 from sklearn.utils.class_weight import compute_class_weight
 
 from src.exception import CustomException
@@ -21,6 +22,7 @@ from src.utils.preprocessing_applicator import PreprocessingApplicator
 @dataclass
 class DataTransformationConfig:
     preprocessor_obj_file_path = os.path.join("artifacts", "preprocessor.pkl")
+    target_encoder_file_path = os.path.join("artifacts", "target_encoder.pkl")
 
 
 class DataTransformation:
@@ -115,6 +117,29 @@ class DataTransformation:
 
         return missing_config, outlier_config, constant_config, imbalance_action
 
+    def _encode_target_if_categorical(self, y_series):
+        """
+        Encode categorical target column to numeric labels.
+        
+        Args:
+            y_series: Target column as pandas Series
+            
+        Returns:
+            tuple: (encoded_array, label_encoder or None)
+        """
+        if y_series.dtype == 'object' or y_series.dtype.name == 'category':
+            logging.info(f"Target column is categorical with values: {y_series.unique()}")
+            logging.info("Encoding categorical target using LabelEncoder")
+            
+            label_encoder = LabelEncoder()
+            encoded_target = label_encoder.fit_transform(y_series)
+            
+            logging.info(f"Target encoded: {dict(zip(label_encoder.classes_, label_encoder.transform(label_encoder.classes_)))}")
+            return encoded_target, label_encoder
+        else:
+            # Target is already numeric
+            return y_series.values, None
+
     def _compute_class_weights(self, y_train):
         classes = np.unique(y_train)
         weights = compute_class_weight(class_weight="balanced", classes=classes, y=y_train)
@@ -197,15 +222,37 @@ class DataTransformation:
             input_feature_test_df = test_df.drop(columns=[target_column_name])
             target_feature_test_df = test_df[target_column_name]
 
+            # Encode categorical target if needed
+            y_train_encoded, target_encoder = self._encode_target_if_categorical(target_feature_train_df)
+            if target_encoder is not None:
+                # Use the same encoder for test data
+                y_test_encoded = target_encoder.transform(target_feature_test_df)
+            else:
+                y_test_encoded = target_feature_test_df.values
+            
+            # Save target encoder if categorical
+            if target_encoder is not None:
+                save_object(
+                    file_path=self.data_transformation_config.target_encoder_file_path,
+                    obj=target_encoder,
+                )
+                logging.info(f"Target encoder saved to {self.data_transformation_config.target_encoder_file_path}")
+
             input_feature_train_arr = preprocessor.fit_transform(input_feature_train_df)
             input_feature_test_arr = preprocessor.transform(input_feature_test_df)
 
-            train_arr = np.c_[input_feature_train_arr, np.array(target_feature_train_df)]
-            test_arr = np.c_[input_feature_test_arr, np.array(target_feature_test_df)]
+            # Ensure dense arrays for downstream numpy concatenation
+            if sparse.issparse(input_feature_train_arr):
+                input_feature_train_arr = input_feature_train_arr.toarray()
+            if sparse.issparse(input_feature_test_arr):
+                input_feature_test_arr = input_feature_test_arr.toarray()
+
+            train_arr = np.c_[input_feature_train_arr, y_train_encoded]
+            test_arr = np.c_[input_feature_test_arr, y_test_encoded]
 
             class_weights = None
             if problem_type == "classification" and imbalance_choice == "class_weights":
-                class_weights = self._compute_class_weights(target_feature_train_df)
+                class_weights = self._compute_class_weights(y_train_encoded)
 
             save_object(
                 file_path=self.data_transformation_config.preprocessor_obj_file_path,
@@ -241,11 +288,33 @@ class DataTransformation:
                 input_feature_test_df = test_df.drop(columns=[target_column_name], axis=1)
                 target_feature_test_df = test_df[target_column_name]
 
+                # Encode categorical target if needed
+                y_train_encoded, target_encoder = self._encode_target_if_categorical(target_feature_train_df)
+                if target_encoder is not None:
+                    # Use the same encoder for test data
+                    y_test_encoded = target_encoder.transform(target_feature_test_df)
+                else:
+                    y_test_encoded = target_feature_test_df.values
+                
+                # Save target encoder if categorical
+                if target_encoder is not None:
+                    save_object(
+                        file_path=self.data_transformation_config.target_encoder_file_path,
+                        obj=target_encoder,
+                    )
+                    logging.info(f"Target encoder saved to {self.data_transformation_config.target_encoder_file_path}")
+
                 input_feature_train_arr = preprocessor.fit_transform(input_feature_train_df)
                 input_feature_test_arr = preprocessor.transform(input_feature_test_df)
 
-                train_arr = np.c_[input_feature_train_arr, np.array(target_feature_train_df)]
-                test_arr = np.c_[input_feature_test_arr, np.array(target_feature_test_df)]
+                # Ensure dense arrays for downstream numpy concatenation
+                if sparse.issparse(input_feature_train_arr):
+                    input_feature_train_arr = input_feature_train_arr.toarray()
+                if sparse.issparse(input_feature_test_arr):
+                    input_feature_test_arr = input_feature_test_arr.toarray()
+
+                train_arr = np.c_[input_feature_train_arr, y_train_encoded]
+                test_arr = np.c_[input_feature_test_arr, y_test_encoded]
 
             elif problem_type == "clustering":
                 input_feature_train_arr = preprocessor.fit_transform(train_df)
