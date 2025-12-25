@@ -131,13 +131,13 @@ Sample datasets are included in the `datasets/` folder for testing:
 **1. heart.csv**
 - 1,025 patient records
 - 13 features (age, blood pressure, cholesterol, resting ECG, etc.)
-- Binary classification: heart disease present or not
+- heart disease present or not
 - Good for testing binary classification workflows
 
 **2. Churn_Modelling.csv**
 - 10,000 customer records
 - 13 features (credit score, geography, age, balance, etc.)
-- Binary classification: customer churn prediction
+- customer churn prediction
 - Good for testing class imbalance handling
 
 Upload either dataset in the app to see the AutoML pipeline in action!
@@ -223,7 +223,7 @@ All tests validate that the system works correctly across different datasets and
 - Currently supports only classification tasks (not regression)
 - Works best with tabular data in CSV format
 - Requires all data to fit in memory
-- Some algorithms may be slow on very large datasets (>100,000 rows)
+- Some algorithms may be slow on very large datasets (>50,000 rows)
 - Hyperparameter search space is predefined and not customizable through the UI
 
 ## Future Improvements
